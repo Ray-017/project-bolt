@@ -4,12 +4,31 @@ import { useState } from 'react';
 import { MapPin, Heart, Star, Camera, Edit, Coffee, Music, BookOpen } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { updateUserProfile } from '@/lib/auth';
+import { BobaMoodSelector } from '@/components/ui/boba-mood-selector';
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const { profile, user, refreshProfile } = useAuth();
-  const [editedProfile, setEditedProfile] = useState(profile);
+  const [editedProfile, setEditedProfile] = useState(profile ? { ...profile } : null);
+  const [currentMood, setCurrentMood] = useState<string | undefined>(undefined);
+
+  const handleMoodSelect = async (mood: { flavor: string }) => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      await updateUserProfile(user.uid, {
+        ...profile,
+        mood: mood.flavor
+      });
+      setCurrentMood(mood.flavor);
+      await refreshProfile();
+    } catch (error) {
+      console.error('Error updating mood:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const interestIcons: Record<string, any> = {
     Boba: '🧋',
@@ -118,6 +137,14 @@ export default function ProfilePage() {
               )}
             </div>
 
+            {/* Mood Section */}
+            <div className="mb-6">
+              <BobaMoodSelector
+                currentMood={currentProfile.mood}
+                onMoodSelect={handleMoodSelect}
+              />
+            </div>
+
             {/* Interests */}
             <div className="mb-6">
               <h4 className="text-lg font-semibold text-gray-800 mb-3">My Interests</h4>
@@ -129,10 +156,14 @@ export default function ProfilePage() {
                       key={index}
                       className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-pink-100 to-purple-100 text-pink-700 rounded-full font-medium"
                     >
-                      {typeof Icon === 'string' ? (
-                        <span className="text-lg">{Icon}</span>
+                      {Icon ? (
+                        typeof Icon === 'string' ? (
+                          <span className="text-lg">{Icon}</span>
+                        ) : (
+                          <Icon size={16} />
+                        )
                       ) : (
-                        <Icon size={16} />
+                        <span className="text-lg">🎯</span>
                       )}
                       <span>{interest}</span>
                     </div>

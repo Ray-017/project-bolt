@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Heart, Search, User, Settings, Home, MessageCircle } from 'lucide-react';
+import { seedDefaultUsers } from '@/lib/seedUsers';
 
 interface NavigationProps {
   activeTab: string;
@@ -24,10 +25,16 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-2">
             <div className="text-3xl">🧋</div>
-            <h1 className="text-2xl font-bold gradient-text">LoveBoba</h1>
+            <h1 className="text-2xl font-bold gradient-text">Boba and Kiss</h1>
           </div>
           
           <div className="hidden md:flex items-center space-x-8">
+            <button
+              onClick={() => seedDefaultUsers()}
+              className="px-4 py-2 bg-pink-100 text-pink-600 rounded-full hover:bg-pink-200 transition-colors"
+            >
+              Add Demo Users
+            </button>
             {navItems.map((item) => {
               const Icon = item.icon;
               return (

@@ -20,6 +20,7 @@ export interface UserProfile {
   createdAt: Date;
   lastActive: Date;
   isOnline: boolean;
+  mood?: string;
 }
 
 export const signUp = async (email: string, password: string, profileData: Partial<UserProfile>) => {

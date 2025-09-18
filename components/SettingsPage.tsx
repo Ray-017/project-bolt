@@ -206,7 +206,7 @@ export default function SettingsPage() {
           <div className="glass-effect rounded-3xl p-8 max-w-md w-full shadow-2xl">
             <h3 className="text-2xl font-bold text-gray-800 mb-4">Report a User</h3>
             <p className="text-gray-600 mb-6">
-              Help us keep LoveBoba safe by reporting inappropriate behavior.
+              Help us keep Boba and Kiss safe by reporting inappropriate behavior.
             </p>
             
             <div className="space-y-3 mb-6">

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Heart, ArrowRight, ArrowLeft, Coffee, Music, Camera, BookOpen } from 'lucide-react';
-import { signUp } from '@/lib/auth';
+import { signUp, signIn } from '@/lib/auth';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface OnboardingFlowProps {
@@ -47,7 +47,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         bio: formData.bio,
         interests: formData.interests,
         photos: [
-          'https://images.pexels.com/photos/1559486/pexels-photo-1559486.jpeg?auto=compress&cs=tinysrgb&w=800'
+          'https://images.pexels.com/photos/2269872/pexels-photo-2269872.jpeg?auto=compress&cs=tinysrgb&w=800'
         ]
       });
       
@@ -60,34 +60,64 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     }
   };
 
-  const steps = [
-    {
-      title: 'Welcome to LoveBoba! 💕',
-      subtitle: 'Let\'s find your perfect match',
-      content: (
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <input
-              type="email"
-              placeholder="Email address"
-              className="w-full p-4 rounded-2xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none transition-colors"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              className="w-full p-4 rounded-2xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none transition-colors"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            />
+  const [isLogin, setIsLogin] = useState(false);
+
+  const handleLogin = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await signIn(formData.email, formData.password);
+      await refreshProfile();
+      onComplete();
+    } catch (error: any) {
+      setError(error.message || 'Failed to log in');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const firstStep = {
+    title: 'Welcome to Boba and Kiss! 💕',
+    subtitle: isLogin ? 'Welcome back!' : 'Let\'s find your perfect match',
+    content: (
+      <div className="space-y-6">
+        <div className="space-y-4">
+          <input
+            type="email"
+            placeholder="Email address"
+            className="w-full p-4 rounded-2xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none transition-colors"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            className="w-full p-4 rounded-2xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none transition-colors"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          />
+          <div className="text-center mt-4">
+            <button
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setStep(0);
+                setError('');
+              }}
+              className="text-pink-500 hover:text-pink-600 transition-colors"
+            >
+              {isLogin ? "New user? Create an account" : "Already have an account? Log in"}
+            </button>
           </div>
-          {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
-          )}
         </div>
-      )
-    },
+        {error && (
+          <div className="text-red-500 text-sm text-center">{error}</div>
+        )}
+      </div>
+    )
+  };
+
+  const steps = isLogin ? [firstStep] : [
+    firstStep,
     {
       title: 'Tell us about yourself',
       subtitle: 'Help others get to know you',
@@ -142,7 +172,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               >
                 <div className="text-center">
                   {Icon ? <Icon size={32} className="mx-auto mb-2 text-green-600" /> : 
-                   <div className="text-3xl mb-2">{interest.icon}</div>}
+                   <div className="text-3xl mb-2">{interest.icon as string}</div>}
                   <div className="text-sm font-medium text-gray-700">{interest.label}</div>
                 </div>
               </button>
@@ -171,15 +201,17 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     }
   ];
 
-  const nextStep = () => {
-    if (step < steps.length - 1) {
-      setStep(step + 1);
-    } else {
+  const handleActionOrNext = () => {
+    if (isLogin) {
+      handleLogin();
+    } else if (step === steps.length - 1) {
       handleSignUp();
+    } else {
+      setStep(step + 1);
     }
   };
 
-  const prevStep = () => {
+  const handlePrevStep = () => {
     if (step > 0) {
       setStep(step - 1);
     }
@@ -190,16 +222,18 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       <div className="w-full max-w-2xl">
         <div className="glass-effect rounded-3xl p-8 shadow-2xl">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center space-x-2 mb-4">
-              {Array.from({ length: steps.length }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-3 w-3 rounded-full transition-all duration-300 ${
-                    i <= step ? 'bg-gradient-to-r from-pink-400 to-purple-400' : 'bg-gray-300'
-                  }`}
-                />
-              ))}
-            </div>
+            {!isLogin && (
+              <div className="inline-flex items-center space-x-2 mb-4">
+                {Array.from({ length: steps.length }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-3 w-3 rounded-full transition-all duration-300 ${
+                      i <= step ? 'bg-gradient-to-r from-pink-400 to-purple-400' : 'bg-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
             <h2 className="text-3xl font-bold mb-2 gradient-text">
               {steps[step].title}
             </h2>
@@ -211,28 +245,32 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           </div>
 
           <div className="flex justify-between">
-            <button
-              onClick={prevStep}
-              disabled={step === 0}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-2xl transition-all duration-300 ${
-                step === 0
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-gray-600 hover:text-pink-400 hover:bg-pink-50'
-              }`}
-            >
-              <ArrowLeft size={20} />
-              <span>Back</span>
-            </button>
+            {!isLogin && step > 0 && (
+              <button
+                onClick={handlePrevStep}
+                className="flex items-center space-x-2 px-6 py-3 rounded-2xl transition-all duration-300 text-gray-600 hover:text-pink-400 hover:bg-pink-50"
+              >
+                <ArrowLeft size={20} />
+                <span>Back</span>
+              </button>
+            )}
+            {!isLogin && step === 0 && <div></div>}
             
             <button
-              onClick={nextStep}
+              onClick={handleActionOrNext}
               disabled={loading}
-              className="flex items-center space-x-2 btn-primary"
+              className="flex items-center space-x-2 btn-primary ml-auto"
             >
-              <span>
-                {loading ? 'Creating Account...' : step === steps.length - 1 ? 'Get Started!' : 'Continue'}
-              </span>
-              <ArrowRight size={20} />
+              {isLogin ? (
+                <span>{loading ? 'Logging in...' : 'Log in'}</span>
+              ) : (
+                <>
+                  <span>
+                    {loading ? 'Creating Account...' : step === steps.length - 1 ? 'Get Started!' : 'Continue'}
+                  </span>
+                  <ArrowRight size={20} />
+                </>
+              )}
             </button>
           </div>
         </div>

@@ -24,7 +24,7 @@ export default function Home() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🧋</div>
-          <h2 className="text-2xl font-bold gradient-text">Loading LoveBoba...</h2>
+          <h2 className="text-2xl font-bold gradient-text">Loading Boba and Kiss...</h2>
         </div>
       </div>
     );

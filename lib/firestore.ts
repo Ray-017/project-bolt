@@ -49,9 +49,8 @@ export const getPotentialMatches = async (currentUserId: string, preferences: an
     const usersRef = collection(db, 'users');
     let q = query(
       usersRef,
-      where('uid', '!=', currentUserId),
       orderBy('lastActive', 'desc'),
-      limit(20)
+      limit(100)
     );
 
     const querySnapshot = await getDocs(q);
@@ -59,14 +58,21 @@ export const getPotentialMatches = async (currentUserId: string, preferences: an
     
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      profiles.push({
-        ...data,
-        createdAt: data.createdAt.toDate(),
-        lastActive: data.lastActive.toDate()
-      } as UserProfile);
+      if (data.uid !== currentUserId) {
+        try {
+          profiles.push({
+            ...data,
+            createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(data.createdAt),
+            lastActive: data.lastActive instanceof Timestamp ? data.lastActive.toDate() : new Date(data.lastActive)
+          } as UserProfile);
+        } catch (error) {
+          console.error('Error processing user profile:', error);
+        }
+      }
     });
     
-    return profiles;
+    // Return first 20 profiles after filtering
+    return profiles.slice(0, 20);
   } catch (error) {
     console.error('Error getting potential matches:', error);
     return [];
